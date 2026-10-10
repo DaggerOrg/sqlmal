@@ -1,0 +1,5 @@
+{
+  "databases": [
+    { "name": "shop", "dsn_env": "SHOP_DATABASE_URL", "migrations": "./migrations" }
+  ]
+}

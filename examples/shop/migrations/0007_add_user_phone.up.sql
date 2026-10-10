@@ -1,0 +1,2 @@
+ALTER TABLE users ADD COLUMN phone text;
+ALTER TABLE users ADD COLUMN country char(2) NOT NULL DEFAULT 'TH';

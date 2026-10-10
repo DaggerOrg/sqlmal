@@ -1,0 +1,12 @@
+/bin/
+/dist/
+*.test
+*.out
+.env
+.env.*
+!.env.example
+.DS_Store
+web/node_modules/
+web/dist/
+web/*.tsbuildinfo
+# The built UI in internal/server/ui is committed on purpose, so `go install` works without Node.

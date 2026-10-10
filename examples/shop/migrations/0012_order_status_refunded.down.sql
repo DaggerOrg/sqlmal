@@ -1,0 +1,2 @@
+-- migrate:irreversible
+-- PostgreSQL cannot remove an enum value, so this change is one-way on purpose.
