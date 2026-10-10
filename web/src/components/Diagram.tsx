@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowsOut, MagnifyingGlassMinus, MagnifyingGlassPlus } from "@phosphor-icons/react";
 import { bounds, edgePath, HEADER_H, MAX_ROWS, NODE_W, ROW_H, type Box } from "../lib/layout";
 import { count } from "../lib/format";
+import { pairKey } from "../lib/focus";
 import type { Table } from "../lib/types";
 
 export type Mark = "added" | "changed";
@@ -20,13 +21,20 @@ interface Props {
   /** Refit the view when this changes. */
   fitKey?: string;
   dim?: Set<string>;
+  /** Tables picked for a closer look. Picked ones glow, related ones glow softly, the rest fade. */
+  focus?: { picked: Set<string>; related: Set<string>; edges: Set<string>; hideOthers: boolean };
+  /** Shift or Ctrl/Cmd click on a table. */
+  onPick?: (name: string) => void;
+  /** Zoom to these tables whenever zoomKey changes. */
+  zoomTo?: string[];
+  zoomKey?: string;
 }
 
 interface View { x: number; y: number; k: number }
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
-export default function Diagram({ tables, ghosts = [], boxes, selected, onSelect, marks = {}, colMarks = {}, label, fitKey, dim }: Props) {
+export default function Diagram({ tables, ghosts = [], boxes, selected, onSelect, marks = {}, colMarks = {}, label, fitKey, dim, focus, onPick, zoomTo, zoomKey }: Props) {
   const svg = useRef<SVGSVGElement>(null);
   const [view, setView] = useState<View>({ x: 40, y: 40, k: 1 });
   const [hover, setHover] = useState<string | null>(null);
@@ -35,27 +43,42 @@ export default function Diagram({ tables, ghosts = [], boxes, selected, onSelect
   const drawn = useMemo(() => [...tables, ...ghosts], [tables, ghosts]);
   const byName = useMemo(() => new Map(drawn.map((t) => [t.name, t])), [drawn]);
 
-  const fit = useCallback(() => {
+  // The camera glides on programmatic moves, and follows the pointer immediately while dragging or scrolling.
+  const [smooth, setSmooth] = useState(false);
+
+  const fit = useCallback((only?: string[]) => {
     const el = svg.current;
-    const names = drawn.map((t) => t.name).filter((n) => boxes[n]);
+    const names = (only && only.length > 0 ? only : drawn.map((t) => t.name)).filter((n) => boxes[n]);
     if (!el || names.length === 0) return;
     const b = bounds(Object.fromEntries(names.map((n) => [n, boxes[n]])));
     const w = el.clientWidth || 800;
     const h = el.clientHeight || 500;
     const pad = 48;
-    const k = clamp(Math.min((w - pad * 2) / b.w, (h - pad * 2) / b.h), 0.2, 1.1);
+    const k = clamp(Math.min((w - pad * 2) / b.w, (h - pad * 2) / b.h), 0.2, only && only.length > 0 ? 1.25 : 1.1);
     setView({ k, x: (w - b.w * k) / 2 - b.x * k, y: (h - b.h * k) / 2 - b.y * k });
   }, [drawn, boxes]);
 
   // Fit when the diagram first appears or when the caller says the content changed.
   useEffect(() => {
+    setSmooth(false);
     fit();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fitKey]);
 
+  // Picking tables, or changing how they are connected, glides the camera to them.
+  const firstZoom = useRef(true);
+  useEffect(() => {
+    if (firstZoom.current) { firstZoom.current = false; return; }
+    if (zoomKey === undefined) return;
+    setSmooth(true);
+    fit(zoomTo);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zoomKey]);
+
   const zoomAt = useCallback((factor: number, cx?: number, cy?: number) => {
     const el = svg.current;
     if (!el) return;
+    setSmooth(false);
     const px = cx ?? el.clientWidth / 2;
     const py = cy ?? el.clientHeight / 2;
     setView((v) => {
@@ -81,7 +104,7 @@ export default function Diagram({ tables, ghosts = [], boxes, selected, onSelect
   const onKey = (e: React.KeyboardEvent) => {
     if (e.key === "+" || e.key === "=") zoomAt(1.2);
     else if (e.key === "-") zoomAt(1 / 1.2);
-    else if (e.key === "0") fit();
+    else if (e.key === "0") { setSmooth(true); fit(); }
     else if (e.key === "Escape") onSelect?.(null);
   };
 
@@ -108,7 +131,7 @@ export default function Diagram({ tables, ghosts = [], boxes, selected, onSelect
       <div className="canvas-tools">
         <button className="icon-btn" aria-label="Zoom in" title="Zoom in (+)" onClick={() => zoomAt(1.25)}><MagnifyingGlassPlus size={20} /></button>
         <button className="icon-btn" aria-label="Zoom out" title="Zoom out (-)" onClick={() => zoomAt(0.8)}><MagnifyingGlassMinus size={20} /></button>
-        <button className="icon-btn" aria-label="Fit to screen" title="Fit to screen (0)" onClick={fit}><ArrowsOut size={20} /></button>
+        <button className="icon-btn" aria-label="Fit to screen" title="Fit to screen (0)" onClick={() => { setSmooth(true); fit(focus && focus.picked.size > 0 ? zoomTo : undefined); }}><ArrowsOut size={20} /></button>
       </div>
       <svg
         ref={svg}
@@ -119,6 +142,7 @@ export default function Diagram({ tables, ghosts = [], boxes, selected, onSelect
         onPointerDown={(e) => {
           if ((e.target as Element).closest(".er-card")) return;
           (e.currentTarget as Element).setPointerCapture(e.pointerId);
+          setSmooth(false);
           drag.current = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y, moved: false };
         }}
         onPointerMove={(e) => {
@@ -137,9 +161,14 @@ export default function Diagram({ tables, ghosts = [], boxes, selected, onSelect
             <path d="M 0 1 L 9 5 L 0 9 z" fill="currentColor" />
           </marker>
         </defs>
-        <g transform={`translate(${view.x} ${view.y}) scale(${view.k})`}>
+        <g className={smooth ? "cam smooth" : "cam"} style={{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.k})` }}>
           <g style={{ color: "rgba(190,200,255,.55)" }}>
             {edges.map((e) => {
+              if (focus) {
+                const lit = focus.edges.has(pairKey(e.from, e.to));
+                if (!lit && focus.hideOthers) return null;
+                return <path key={e.key} d={e.d} className={`er-edge ${lit ? "flow" : "faded"}`} markerEnd="url(#er-arrow)" />;
+              }
               const on = active && (e.from === active || e.to === active);
               return <path key={e.key} d={e.d} className={`er-edge ${on ? "on" : active ? "faded" : ""}`} markerEnd="url(#er-arrow)" />;
             })}
@@ -149,7 +178,8 @@ export default function Diagram({ tables, ghosts = [], boxes, selected, onSelect
             if (!b) return null;
             const ghost = ghosts.includes(t);
             const mark = marks[t.name];
-            const cls = ["er-card", ghost ? "ghost" : mark ?? "", selected === t.name ? "sel" : "", dim?.has(t.name) ? "dim" : ""].join(" ");
+            const f = focus ? (focus.picked.has(t.name) ? "picked" : focus.related.has(t.name) ? "related" : focus.hideOthers ? "hide" : "dim") : "";
+            const cls = ["er-card", ghost ? "ghost" : mark ?? "", selected === t.name ? "sel" : "", dim?.has(t.name) ? "dim" : "", f].join(" ");
             return (
               <Card
                 key={t.name}
@@ -157,19 +187,19 @@ export default function Diagram({ tables, ghosts = [], boxes, selected, onSelect
                 b={b}
                 cls={cls}
                 cols={colMarks[t.name]}
-                onSelect={() => onSelect?.(selected === t.name ? null : t.name)}
+                onSelect={(multi) => (multi && onPick ? onPick(t.name) : onSelect?.(selected === t.name ? null : t.name))}
                 onHover={(on) => setHover(on ? t.name : null)}
               />
             );
           })}
         </g>
       </svg>
-      <p className="canvas-hint">Drag to pan, scroll to zoom, click a table for details</p>
+      <p className="canvas-hint">Drag to pan, scroll to zoom, click a table for details{onPick ? ", Shift-click to pick several" : ""}</p>
     </div>
   );
 }
 
-function Card({ t, b, cls, cols, onSelect, onHover }: { t: Table; b: Box; cls: string; cols?: Record<string, "new" | "mod">; onSelect: () => void; onHover: (on: boolean) => void }) {
+function Card({ t, b, cls, cols, onSelect, onHover }: { t: Table; b: Box; cls: string; cols?: Record<string, "new" | "mod">; onSelect: (multi: boolean) => void; onHover: (on: boolean) => void }) {
   const shown = t.columns.slice(0, MAX_ROWS);
   const fkCols = new Set(t.foreign_keys.flatMap((f) => f.columns));
   const pk = new Set(t.primary_key);
@@ -184,12 +214,12 @@ function Card({ t, b, cls, cols, onSelect, onHover }: { t: Table; b: Box; cls: s
       aria-pressed={cls.includes(" sel")}
       onClick={(e) => {
         e.stopPropagation();
-        onSelect();
+        onSelect(e.shiftKey || e.ctrlKey || e.metaKey);
       }}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          onSelect();
+          onSelect(e.shiftKey);
         }
       }}
       onPointerEnter={() => onHover(true)}

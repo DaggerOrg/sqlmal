@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
-import { MagnifyingGlass, X } from "@phosphor-icons/react";
+import { SidebarSimple, X } from "@phosphor-icons/react";
 import Diagram from "../components/Diagram";
+import TableMenu from "../components/TableMenu";
 import TableDetail from "../components/TableDetail";
 import { Empty, ErrorBox, PageTitle, Skeleton } from "../components/ui";
 import type { Api } from "../lib/api";
 import { useAsync, useRoute } from "../lib/hooks";
+import { computeFocus, type FocusMode } from "../lib/focus";
 import { boxesFor } from "../lib/schema";
 import { plural } from "../lib/format";
 
@@ -12,6 +14,9 @@ export default function SchemaPage({ api }: { api: Api }) {
   const { parts, go } = useRoute();
   const { data: schema, error, loading, reload } = useAsync(() => api.schema(), api.database);
   const [q, setQ] = useState("");
+  const [picked, setPicked] = useState<string[]>([]);
+  const [mode, setMode] = useState<FocusMode>("path");
+  const [menu, setMenu] = useState(true);
   const selected = parts[1] ?? null;
 
   const boxes = useMemo(() => (schema ? boxesFor(schema.tables) : {}), [schema]);
@@ -20,6 +25,9 @@ export default function SchemaPage({ api }: { api: Api }) {
     if (!schema || !needle) return undefined;
     return new Set(schema.tables.filter((t) => !t.name.toLowerCase().includes(needle) && !t.columns.some((c) => c.name.toLowerCase().includes(needle))).map((t) => t.name));
   }, [schema, q]);
+
+  const focus = useMemo(() => (schema && picked.length > 0 ? computeFocus(schema.tables, picked, mode) : undefined), [schema, picked, mode]);
+  const toggle = (n: string) => setPicked((p) => (p.includes(n) ? p.filter((x) => x !== n) : [...p, n]));
 
   if (error) return <ErrorBox error={error} onRetry={reload} />;
   if (loading || !schema) return <Skeleton lines={8} />;
@@ -31,12 +39,26 @@ export default function SchemaPage({ api }: { api: Api }) {
   return (
     <div className="stack" style={{ gap: "1.25rem" }}>
       <PageTitle title="Schema" sub={`${plural(schema.tables.length, "table")}, ${plural(fks, "foreign key")}, ${plural(schema.enums.length, "enum")}.`}>
-        <label className="search">
-          <MagnifyingGlass size={18} aria-hidden />
-          <input type="search" placeholder="Find a table or column" value={q} onChange={(e) => setQ(e.target.value)} aria-label="Find a table or column" />
-        </label>
+        {!menu && (
+          <button className="btn btn-sm" onClick={() => setMenu(true)} aria-expanded={false}><SidebarSimple size={18} aria-hidden /> Tables{picked.length > 0 ? ` (${picked.length} picked)` : ""}</button>
+        )}
       </PageTitle>
-      <div className={table ? "schema-grid with-side" : "schema-grid"}>
+      <div className={["schema-shell", menu ? "with-menu" : "", table ? "with-side" : ""].join(" ")}>
+        {menu && (
+          <TableMenu
+            tables={schema.tables}
+            picked={picked}
+            focus={focus}
+            mode={mode}
+            q={q}
+            onQuery={setQ}
+            onMode={setMode}
+            onToggle={toggle}
+            onClear={() => setPicked([])}
+            onDetails={(n) => go(`schema/${n}`)}
+            onClose={() => setMenu(false)}
+          />
+        )}
         <Diagram
           tables={schema.tables}
           boxes={boxes}
@@ -44,7 +66,11 @@ export default function SchemaPage({ api }: { api: Api }) {
           onSelect={(n) => go(n ? `schema/${n}` : "schema")}
           label={`Entity diagram with ${schema.tables.length} tables`}
           fitKey={api.database}
-          dim={dim}
+          dim={focus ? undefined : dim}
+          focus={focus && { picked: focus.picked, related: focus.related, edges: focus.edges, hideOthers: mode === "only" }}
+          onPick={toggle}
+          zoomTo={focus ? [...focus.picked, ...focus.related] : undefined}
+          zoomKey={`${picked.join(",")}|${mode}`}
         />
         {table && (
           <aside className="panel side" style={{ padding: "1.25rem" }} aria-label={`Details for ${table.name}`}>
