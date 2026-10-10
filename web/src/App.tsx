@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowsLeftRight, Clock, Database, GitDiff, House, ListChecks, Moon, Sun, Table } from "@phosphor-icons/react";
+import { ArrowsLeftRight, Clock, Database, GitBranch, GitDiff, House, ListChecks, Moon, Sun, Table } from "@phosphor-icons/react";
 import { Link } from "./components/Link";
 import { Chip, ErrorBox, Skeleton } from "./components/ui";
 import { ApiError, connect, setToken, type Api } from "./lib/api";
@@ -10,10 +10,12 @@ import Migrations from "./pages/Migrations";
 import Overview from "./pages/Overview";
 import Schema from "./pages/Schema";
 import Timeline from "./pages/Timeline";
+import Versions from "./pages/Versions";
 
 const NAV = [
   { to: "", label: "Overview", icon: House },
   { to: "migrations", label: "Migrations", icon: ListChecks },
+  { to: "versions", label: "Versions", icon: GitBranch },
   { to: "schema", label: "Schema", icon: Table },
   { to: "timeline", label: "Timeline", icon: Clock },
   { to: "drift", label: "Drift", icon: GitDiff },
@@ -76,6 +78,7 @@ function Route({ page, api }: { page: string; api: Api }) {
   switch (page) {
     case "": return <Overview api={api} />;
     case "migrations": return <Migrations api={api} />;
+    case "versions": return <Versions api={api} />;
     case "schema": return <Schema api={api} />;
     case "timeline": return <Timeline api={api} />;
     case "drift": return <Drift api={api} />;

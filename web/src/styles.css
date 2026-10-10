@@ -241,3 +241,20 @@ code, pre, .mono { font-family: var(--font-mono); }
 .panel-dark .mrow .v { color: rgba(255,255,255,.7); }
 .panel-dark .mrow:hover { background: rgba(255,255,255,.08); }
 .panel-dark .mrow[aria-current="true"] { background: rgba(255,255,255,.14); border-color: rgba(244,114,182,.6); }
+
+/* Versions: a commit log in the style of GitHub */
+.vday { font-size: 13px; color: var(--ink-faint); margin: .9rem 0 .3rem; }
+.vlist { list-style: none; margin: 0; padding: 0; border: 1px solid var(--rule); border-radius: 1.1rem; overflow: hidden; }
+.vrow { display: grid; grid-template-columns: 1fr auto; gap: .75rem; align-items: center; padding: .8rem 1rem; border-top: 1px solid var(--rule); }
+.vrow:first-child { border-top: 0; }
+.vrow a.t { font-weight: 600; color: inherit; text-decoration: none; }
+.vrow a.t:hover { text-decoration: underline; }
+.vrow .meta { font-size: 13px; color: var(--ink-faint); margin-top: .15rem; }
+.vrow .sha { font-family: var(--font-mono); font-size: 12.5px; padding: .25rem .6rem; border: 1px solid var(--rule); border-radius: .6rem; color: var(--ink-faint); }
+.stat { font-family: var(--font-mono); font-size: 12.5px; white-space: nowrap; }
+.stat .a { color: var(--success-soft-ink); } .stat .d { color: var(--destructive-soft-ink); }
+.sql.diff .sg { display: inline-block; width: 1.4em; font-weight: 700; user-select: none; }
+.sql.diff.add .sql-line { background: rgba(46,160,67,.16); } .sql.diff.add .sg { color: #56d364; }
+.sql.diff.del .sql-line { background: rgba(248,81,73,.16); } .sql.diff.del .sg { color: #ff7b72; }
+.cmp { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
+.cmp select { min-height: 40px; border-radius: .8rem; border: 1px solid var(--rule); background: var(--paper); color: inherit; padding: 0 .7rem; font-family: var(--font-mono); font-size: 13px; }

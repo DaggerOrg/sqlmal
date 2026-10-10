@@ -94,15 +94,15 @@ function toLines(tokens: Token[]): Token[][] {
   return lines;
 }
 
-export function SqlView({ sql, marks = [], label }: { sql: string; marks?: number[]; label: string }) {
+export function SqlView({ sql, marks = [], label, sign }: { sql: string; marks?: number[]; label: string; sign?: "+" | "-" }) {
   const lines = toLines(highlight(sql.replace(/\n$/, "")));
   const marked = new Set(marks);
   return (
-    <pre className="sql" tabIndex={0} aria-label={label}>
+    <pre className={`sql${sign ? ` diff ${sign === "+" ? "add" : "del"}` : ""}`} tabIndex={0} aria-label={label}>
       <code>
         {lines.map((ln, i) => (
           <span key={i} className={`sql-line ${marked.has(i + 1) ? "hl" : ""}`}>
-            <span className="ln" aria-hidden>{i + 1}</span>
+            <span className="ln" aria-hidden>{i + 1}</span>{sign && <span className="sg" aria-hidden>{sign}</span>}
             {ln.map((t, j) => (t.kind === "text" ? t.text : <span key={j} className={t.kind}>{t.text}</span>))}
           </span>
         ))}
