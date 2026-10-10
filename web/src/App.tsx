@@ -10,6 +10,7 @@ import Migrations from "./pages/Migrations";
 import Overview from "./pages/Overview";
 import Schema from "./pages/Schema";
 import Timeline from "./pages/Timeline";
+import NewVersion from "./pages/NewVersion";
 import Versions from "./pages/Versions";
 
 const NAV = [
@@ -79,6 +80,7 @@ function Route({ page, api }: { page: string; api: Api }) {
     case "": return <Overview api={api} />;
     case "migrations": return <Migrations api={api} />;
     case "versions": return <Versions api={api} />;
+    case "new": return <NewVersion api={api} />;
     case "schema": return <Schema api={api} />;
     case "timeline": return <Timeline api={api} />;
     case "drift": return <Drift api={api} />;

@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-ADMIN="${MS_ADMIN_DSN:-postgres://studio:studio@127.0.0.1:54329/postgres}"
+ADMIN="${MS_ADMIN_DSN:-postgres://studio:studio@127.0.0.1:${MS_DB_PORT:-54329}/postgres}"
 DEMO="${ADMIN%/*}/shop_demo"
 BIN="${BIN:-bin/migrate-studio}"
 

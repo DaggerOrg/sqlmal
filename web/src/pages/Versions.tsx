@@ -54,7 +54,9 @@ function Log({ data }: { data: Data }) {
 
   return (
     <div className="stack" style={{ gap: "1.25rem" }}>
-      <PageTitle title="Versions" sub={`${plural(rows.length, "version")} of your schema, newest first. Open one to see exactly what it changed.`} />
+      <PageTitle title="Versions" sub={`${plural(rows.length, "version")} of your schema, newest first. Open one to see exactly what it changed.`}>
+        <Link to="new" className="btn btn-sm btn-grad">New version</Link>
+      </PageTitle>
       <section className="panel cmp" style={{ padding: "1rem 1.25rem" }} aria-label="Compare versions">
         <GitMerge size={20} aria-hidden />
         <b>Compare</b>
