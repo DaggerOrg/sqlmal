@@ -7,8 +7,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"github.com/Stephen-SMH/migrate-studio/internal/introspect"
-	"github.com/Stephen-SMH/migrate-studio/internal/testdb"
+	"github.com/Stephen-SMH/sqlmal/internal/introspect"
+	"github.com/Stephen-SMH/sqlmal/internal/testdb"
 )
 
 func col(name, typ string, notNull bool) introspect.Column {

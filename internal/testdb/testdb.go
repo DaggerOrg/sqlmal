@@ -15,7 +15,7 @@ import (
 
 // AdminDSN is the server used to create throwaway databases.
 func AdminDSN() string {
-	if v := os.Getenv("MIGRATE_STUDIO_TEST_ADMIN_DSN"); v != "" {
+	if v := os.Getenv("SQLMAL_TEST_ADMIN_DSN"); v != "" {
 		return v
 	}
 	return "postgres://studio:studio@127.0.0.1:54329/postgres"
@@ -42,7 +42,7 @@ func New(t testing.TB) string {
 		if os.Getenv("CI") != "" {
 			t.Fatalf("no PostgreSQL for integration tests (%v); CI must provide one", err) // never skip silently in CI
 		}
-		t.Skipf("no PostgreSQL for integration tests (%v); run `make demo-db` or set MIGRATE_STUDIO_TEST_ADMIN_DSN", err)
+		t.Skipf("no PostgreSQL for integration tests (%v); run `make demo-db` or set SQLMAL_TEST_ADMIN_DSN", err)
 	}
 	b := make([]byte, 6)
 	_, _ = rand.Read(b)

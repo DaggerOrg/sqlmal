@@ -9,7 +9,7 @@ import (
 
 func write(t *testing.T, body string) string {
 	t.Helper()
-	p := filepath.Join(t.TempDir(), "migrate-studio.json")
+	p := filepath.Join(t.TempDir(), "sqlmal.json")
 	if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
 		t.Fatal(err)
 	}

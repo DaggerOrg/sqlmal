@@ -60,7 +60,7 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
   if (tok) headers.Authorization = `Bearer ${tok}`;
   if (init?.method === "POST") {
     headers["Content-Type"] = "application/json";
-    headers["X-Migrate-Studio"] = "1";
+    headers["X-SQLMal"] = "1";
   }
   let res: Response;
   try {
@@ -108,7 +108,7 @@ function live(info: Info, database: string): Api {
 }
 
 function snapshot(b: Bundle): Api {
-  const readOnly = () => Promise.reject(new ApiError(403, "read_only", "This is a saved snapshot. Run Migrate Studio against your own database to use this."));
+  const readOnly = () => Promise.reject(new ApiError(403, "read_only", "This is a saved snapshot. Run SQLMal against your own database to use this."));
   return {
     info: { version: "snapshot", read_only: true, static: true, databases: [{ name: b.database }] },
     database: b.database,
@@ -133,7 +133,7 @@ export async function connect(): Promise<Api> {
     if (e instanceof ApiError && e.code === "unauthorized") throw e;
   }
   const res = await fetch("demo.json").catch(() => null);
-  if (!res || !res.ok) throw new ApiError(0, "no_backend", "No Migrate Studio server was found, and there is no demo snapshot.");
+  if (!res || !res.ok) throw new ApiError(0, "no_backend", "No SQLMal server was found, and there is no demo snapshot.");
   return snapshot((await res.json()) as Bundle);
 }
 

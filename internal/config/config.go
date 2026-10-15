@@ -1,4 +1,4 @@
-// Package config reads migrate-studio.json.
+// Package config reads sqlmal.json.
 //
 // Connection strings are read from environment variables by default, so a
 // password never has to sit in a file that gets committed.

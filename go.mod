@@ -1,4 +1,4 @@
-module github.com/Stephen-SMH/migrate-studio
+module github.com/Stephen-SMH/sqlmal
 
 go 1.27.1
 

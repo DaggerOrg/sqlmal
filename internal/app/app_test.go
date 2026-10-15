@@ -10,9 +10,9 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"github.com/Stephen-SMH/migrate-studio/internal/config"
-	"github.com/Stephen-SMH/migrate-studio/internal/engine"
-	"github.com/Stephen-SMH/migrate-studio/internal/testdb"
+	"github.com/Stephen-SMH/sqlmal/internal/config"
+	"github.com/Stephen-SMH/sqlmal/internal/engine"
+	"github.com/Stephen-SMH/sqlmal/internal/testdb"
 )
 
 func setup(t *testing.T) (*App, string, string) {

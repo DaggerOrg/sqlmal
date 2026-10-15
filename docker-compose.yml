@@ -1,4 +1,4 @@
-# A throwaway Postgres for trying Migrate Studio and for running its tests.
+# A throwaway Postgres for trying SQLMal and for running its tests.
 services:
   db:
     image: postgres:17

@@ -10,8 +10,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/Stephen-SMH/migrate-studio/internal/migration"
-	"github.com/Stephen-SMH/migrate-studio/internal/sqlsplit"
+	"github.com/Stephen-SMH/sqlmal/internal/migration"
+	"github.com/Stephen-SMH/sqlmal/internal/sqlsplit"
 )
 
 type Severity string

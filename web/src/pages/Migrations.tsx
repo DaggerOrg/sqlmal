@@ -26,7 +26,7 @@ export default function Migrations({ api }: { api: Api }) {
 
   if (error) return <ErrorBox error={error} onRetry={reload} />;
   if (loading || !data) return <Skeleton lines={8} />;
-  if (rows.length === 0) return <Empty title="No migrations yet" hint="Create one with: migrate-studio new add_users" />;
+  if (rows.length === 0) return <Empty title="No migrations yet" hint="Create one with: sqlmal new add_users" />;
 
   const sel = parts[1] ? Number(parts[1]) : newestFirst[0].version;
   const row = rows.find((r) => r.version === sel);

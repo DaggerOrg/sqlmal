@@ -1,4 +1,4 @@
-// Command migrate-studio manages SQL migrations for PostgreSQL and shows them
+// Command sqlmal manages SQL migrations for PostgreSQL and shows them
 // as a diagram you can explore.
 package main
 
@@ -17,19 +17,19 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Stephen-SMH/migrate-studio/internal/app"
-	"github.com/Stephen-SMH/migrate-studio/internal/config"
-	"github.com/Stephen-SMH/migrate-studio/internal/engine"
-	"github.com/Stephen-SMH/migrate-studio/internal/lint"
-	"github.com/Stephen-SMH/migrate-studio/internal/migration"
-	"github.com/Stephen-SMH/migrate-studio/internal/server"
+	"github.com/Stephen-SMH/sqlmal/internal/app"
+	"github.com/Stephen-SMH/sqlmal/internal/config"
+	"github.com/Stephen-SMH/sqlmal/internal/engine"
+	"github.com/Stephen-SMH/sqlmal/internal/lint"
+	"github.com/Stephen-SMH/sqlmal/internal/migration"
+	"github.com/Stephen-SMH/sqlmal/internal/server"
 )
 
 var version = "dev"
 
-const usage = `migrate-studio: SQL migrations for PostgreSQL, with a map of your schema.
+const usage = `sqlmal: SQL migrations for PostgreSQL, with a map of your schema.
 
-Usage: migrate-studio [global flags] <command> [flags]
+Usage: sqlmal [global flags] <command> [flags]
 
 Commands:
   init [dir]          create a migrations directory and a config file
@@ -48,7 +48,7 @@ Commands:
   version
 
 Global flags (before the command):
-  --config FILE   migrate-studio.json (default: ./migrate-studio.json if present)
+  --config FILE   sqlmal.json (default: ./sqlmal.json if present)
   --db NAME       which database from the config (default: the first)
   --dsn URL       connect directly (default: $DATABASE_URL)
   --dir DIR       migrations directory (default: ./migrations)
@@ -64,7 +64,7 @@ func main() {
 
 func run(args []string, out, errw io.Writer) int {
 	var g global
-	fs := flag.NewFlagSet("migrate-studio", flag.ContinueOnError)
+	fs := flag.NewFlagSet("sqlmal", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
 	fs.StringVar(&g.cfgPath, "config", "", "")
 	fs.StringVar(&g.db, "db", "", "")
@@ -85,7 +85,7 @@ func run(args []string, out, errw io.Writer) int {
 
 	switch cmd {
 	case "version":
-		fmt.Fprintln(out, "migrate-studio", version)
+		fmt.Fprintln(out, "sqlmal", version)
 		return 0
 	case "init":
 		return finish(errw, cmdInit(out, g, rest))
@@ -145,8 +145,8 @@ func open(g global) (*app.App, string, error) {
 	var cfg config.Config
 	path := g.cfgPath
 	if path == "" {
-		if _, err := os.Stat("migrate-studio.json"); err == nil && g.dsn == "" {
-			path = "migrate-studio.json"
+		if _, err := os.Stat("sqlmal.json"); err == nil && g.dsn == "" {
+			path = "sqlmal.json"
 		}
 	}
 	if path != "" {
@@ -161,7 +161,7 @@ func open(g global) (*app.App, string, error) {
 			dsn = os.Getenv("DATABASE_URL")
 		}
 		if dsn == "" {
-			return nil, "", usageError("no database: set DATABASE_URL, pass --dsn, or create migrate-studio.json (run: migrate-studio init)")
+			return nil, "", usageError("no database: set DATABASE_URL, pass --dsn, or create sqlmal.json (run: sqlmal init)")
 		}
 		dir := g.dir
 		if dir == "" {
@@ -218,23 +218,23 @@ func cmdInit(out io.Writer, g global, args []string) error {
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return err
 	}
-	if _, err := os.Stat("migrate-studio.json"); err == nil {
-		fmt.Fprintln(out, "migrate-studio.json already exists, leaving it alone")
+	if _, err := os.Stat("sqlmal.json"); err == nil {
+		fmt.Fprintln(out, "sqlmal.json already exists, leaving it alone")
 	} else {
 		cfg := map[string]any{"databases": []map[string]string{{"name": "main", "dsn_env": "DATABASE_URL", "migrations": "./" + filepath.ToSlash(dir)}}}
 		b, _ := json.MarshalIndent(cfg, "", "  ")
-		if err := os.WriteFile("migrate-studio.json", append(b, '\n'), 0o644); err != nil {
+		if err := os.WriteFile("sqlmal.json", append(b, '\n'), 0o644); err != nil {
 			return err
 		}
-		fmt.Fprintln(out, "wrote migrate-studio.json (the connection URL is read from $DATABASE_URL)")
+		fmt.Fprintln(out, "wrote sqlmal.json (the connection URL is read from $DATABASE_URL)")
 	}
-	fmt.Fprintf(out, "created %s/\n\nNext:\n  migrate-studio new create_users\n  export DATABASE_URL=postgres://user:pass@localhost:5432/mydb\n  migrate-studio up\n  migrate-studio serve\n", dir)
+	fmt.Fprintf(out, "created %s/\n\nNext:\n  sqlmal new create_users\n  export DATABASE_URL=postgres://user:pass@localhost:5432/mydb\n  sqlmal up\n  sqlmal serve\n", dir)
 	return nil
 }
 
 func cmdNew(out io.Writer, g global, args []string) error {
 	if len(args) != 1 {
-		return usageError("usage: migrate-studio new <name>")
+		return usageError("usage: sqlmal new <name>")
 	}
 	dir := g.dir
 	if dir == "" {
@@ -259,7 +259,7 @@ func cmdLint(out, errw io.Writer, g global, args []string) int {
 	dir := g.dir
 	if dir == "" {
 		dir = "migrations"
-		if g.cfgPath != "" || fileExists("migrate-studio.json") {
+		if g.cfgPath != "" || fileExists("sqlmal.json") {
 			if a, name, err := open(g); err == nil {
 				if d, err := a.Dir(name); err == nil {
 					dir = d
@@ -368,7 +368,7 @@ func printResults(out io.Writer, res []engine.Result, dry bool) {
 
 func cmdGoto(ctx context.Context, out io.Writer, a *app.App, name string, args []string) error {
 	if len(args) != 1 {
-		return usageError("usage: migrate-studio goto <version>")
+		return usageError("usage: sqlmal goto <version>")
 	}
 	v, err := strconv.ParseInt(args[0], 10, 64)
 	if err != nil {
@@ -385,7 +385,7 @@ func cmdGoto(ctx context.Context, out io.Writer, a *app.App, name string, args [
 
 func cmdBaseline(ctx context.Context, out io.Writer, a *app.App, name string, args []string) error {
 	if len(args) != 1 {
-		return usageError("usage: migrate-studio baseline <version>")
+		return usageError("usage: sqlmal baseline <version>")
 	}
 	v, err := strconv.ParseInt(args[0], 10, 64)
 	if err != nil {
@@ -446,13 +446,13 @@ func cmdDrift(ctx context.Context, out io.Writer, a *app.App, name string) int {
 	for _, c := range rep.Changes {
 		fmt.Fprintf(out, "  + %s\n", c)
 	}
-	fmt.Fprintln(out, "\nrun: migrate-studio generate <name>   to write a migration that catches the files up")
+	fmt.Fprintln(out, "\nrun: sqlmal generate <name>   to write a migration that catches the files up")
 	return 1
 }
 
 func cmdGenerate(ctx context.Context, out io.Writer, a *app.App, name string, args []string) error {
 	if len(args) != 1 {
-		return usageError("usage: migrate-studio generate <name>")
+		return usageError("usage: sqlmal generate <name>")
 	}
 	g, err := a.Generate(ctx, name)
 	if err != nil {
@@ -470,14 +470,14 @@ func cmdGenerate(ctx context.Context, out io.Writer, a *app.App, name string, ar
 	for _, w := range g.Up.Warnings {
 		fmt.Fprintf(out, "  review: %s\n", w)
 	}
-	fmt.Fprintln(out, "\nThe live database already has these changes. Record the new migration as applied with:\n  migrate-studio baseline <version>")
+	fmt.Fprintln(out, "\nThe live database already has these changes. Record the new migration as applied with:\n  sqlmal baseline <version>")
 	return nil
 }
 
 func cmdExport(ctx context.Context, out io.Writer, a *app.App, name string, args []string) error {
 	fs := flag.NewFlagSet("export", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
-	to := fs.String("out", "migrate-studio-export.json", "")
+	to := fs.String("out", "sqlmal-export.json", "")
 	if err := fs.Parse(args); err != nil {
 		return usageError(err.Error())
 	}
@@ -501,7 +501,7 @@ func cmdServe(ctx context.Context, out io.Writer, a *app.App, args []string) err
 	fs.SetOutput(io.Discard)
 	addr := fs.String("addr", "127.0.0.1:8484", "")
 	write := fs.Bool("allow-write", false, "")
-	token := fs.String("token", os.Getenv("MIGRATE_STUDIO_TOKEN"), "")
+	token := fs.String("token", os.Getenv("SQLMAL_TOKEN"), "")
 	if err := fs.Parse(args); err != nil {
 		return usageError(err.Error())
 	}
@@ -525,7 +525,7 @@ func cmdServe(ctx context.Context, out io.Writer, a *app.App, args []string) err
 	if *write {
 		mode = "WRITE ENABLED: the UI can run migrations"
 	}
-	fmt.Fprintf(out, "Migrate Studio %s on http://%s  (%s)\n", version, *addr, mode)
+	fmt.Fprintf(out, "SQLMal %s on http://%s  (%s)\n", version, *addr, mode)
 	if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}

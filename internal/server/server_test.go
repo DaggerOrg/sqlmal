@@ -11,9 +11,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Stephen-SMH/migrate-studio/internal/app"
-	"github.com/Stephen-SMH/migrate-studio/internal/config"
-	"github.com/Stephen-SMH/migrate-studio/internal/testdb"
+	"github.com/Stephen-SMH/sqlmal/internal/app"
+	"github.com/Stephen-SMH/sqlmal/internal/config"
+	"github.com/Stephen-SMH/sqlmal/internal/testdb"
 )
 
 func newServer(t *testing.T, o Options) (*httptest.Server, string) {
@@ -59,7 +59,7 @@ func do(t *testing.T, method, url string, body any, hdr map[string]string) (*htt
 	return res, out
 }
 
-var writeHdr = map[string]string{"X-Migrate-Studio": "1"}
+var writeHdr = map[string]string{"X-SQLMal": "1"}
 
 func TestReadOnlyServerShowsEverythingAndChangesNothing(t *testing.T) {
 	srv, _ := newServer(t, Options{Addr: "127.0.0.1:8484", Version: "test"})
@@ -131,11 +131,11 @@ func TestWritesNeedASameSiteRequestWithTheCustomHeader(t *testing.T) {
 	if res, _ := do(t, "POST", srv.URL+"/api/default/run", body, nil); res.StatusCode != 403 {
 		t.Errorf("a plain form post has no custom header: %d", res.StatusCode)
 	}
-	evil := map[string]string{"X-Migrate-Studio": "1", "Origin": "https://evil.example"}
+	evil := map[string]string{"X-SQLMal": "1", "Origin": "https://evil.example"}
 	if res, _ := do(t, "POST", srv.URL+"/api/default/run", body, evil); res.StatusCode != 403 {
 		t.Errorf("a request from another site is refused: %d", res.StatusCode)
 	}
-	same := map[string]string{"X-Migrate-Studio": "1", "Origin": srv.URL}
+	same := map[string]string{"X-SQLMal": "1", "Origin": srv.URL}
 	if res, _ := do(t, "POST", srv.URL+"/api/default/run", body, same); res.StatusCode != 200 {
 		t.Errorf("the UI's own requests work: %d", res.StatusCode)
 	}

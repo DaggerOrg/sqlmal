@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/Stephen-SMH/migrate-studio/internal/introspect"
+	"github.com/Stephen-SMH/sqlmal/internal/introspect"
 )
 
 type Kind string

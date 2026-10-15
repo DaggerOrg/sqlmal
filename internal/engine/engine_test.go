@@ -12,8 +12,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"github.com/Stephen-SMH/migrate-studio/internal/migration"
-	"github.com/Stephen-SMH/migrate-studio/internal/testdb"
+	"github.com/Stephen-SMH/sqlmal/internal/migration"
+	"github.com/Stephen-SMH/sqlmal/internal/testdb"
 )
 
 type fixture struct {

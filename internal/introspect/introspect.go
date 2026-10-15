@@ -90,7 +90,7 @@ func (s Schema) Table(name string) (Table, bool) {
 type Options struct {
 	// Schemas to read. Defaults to ["public"].
 	Schemas []string
-	// IncludeTool keeps Migrate Studio's own bookkeeping tables in the result.
+	// IncludeTool keeps SQLMal's own bookkeeping tables in the result.
 	IncludeTool bool
 }
 

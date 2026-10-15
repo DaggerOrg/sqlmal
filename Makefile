@@ -1,9 +1,9 @@
 .PHONY: build ui test test-go test-web lint demo-db demo clean
 
-BIN := bin/migrate-studio
+BIN := bin/sqlmal
 
 build: ## Build the binary (uses the committed UI)
-	go build -o $(BIN) ./cmd/migrate-studio
+	go build -o $(BIN) ./cmd/sqlmal
 
 ui: ## Rebuild the web UI and embed it in the Go server
 	cd web && npm ci && npm run build
@@ -12,7 +12,7 @@ ui: ## Rebuild the web UI and embed it in the Go server
 
 test: test-go test-web ## Run every test
 
-# Integration tests need a Postgres. Set MIGRATE_STUDIO_TEST_ADMIN_DSN, or start one with `make demo-db`.
+# Integration tests need a Postgres. Set SQLMAL_TEST_ADMIN_DSN, or start one with `make demo-db`.
 test-go:
 	go vet ./...
 	go test -race -timeout 300s ./...

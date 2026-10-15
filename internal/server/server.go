@@ -22,9 +22,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Stephen-SMH/migrate-studio/internal/app"
-	"github.com/Stephen-SMH/migrate-studio/internal/engine"
-	"github.com/Stephen-SMH/migrate-studio/internal/migration"
+	"github.com/Stephen-SMH/sqlmal/internal/app"
+	"github.com/Stephen-SMH/sqlmal/internal/engine"
+	"github.com/Stephen-SMH/sqlmal/internal/migration"
 )
 
 //go:embed all:ui
@@ -185,8 +185,8 @@ func (s *Server) write(h handler) http.HandlerFunc {
 				return
 			}
 		}
-		if r.Header.Get("X-Migrate-Studio") != "1" {
-			fail(w, http.StatusForbidden, "missing_header", "Missing X-Migrate-Studio header.")
+		if r.Header.Get("X-SQLMal") != "1" {
+			fail(w, http.StatusForbidden, "missing_header", "Missing X-SQLMal header.")
 			return
 		}
 		h(w, r, db)

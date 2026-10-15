@@ -3,7 +3,7 @@ package lint
 import (
 	"testing"
 
-	"github.com/Stephen-SMH/migrate-studio/internal/migration"
+	"github.com/Stephen-SMH/sqlmal/internal/migration"
 )
 
 func up(sql string) migration.Migration {

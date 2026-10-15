@@ -1,4 +1,4 @@
-# How Migrate Studio works
+# How SQLMal works
 
 ## Running migrations
 

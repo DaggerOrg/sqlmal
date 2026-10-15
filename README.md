@@ -1,10 +1,10 @@
-# Migrate Studio
+# SQLMal
 
 Run PostgreSQL migrations from the command line, and **see** what they do: a live map of your schema, a timeline that replays the database after every migration, and a drift check that catches changes someone made by hand.
 
 One Go binary. The web UI is built in. No agent, no account, nothing leaves your machine.
 
-**[Live demo](https://stephen-smh.github.io/migrate-studio/)** (a saved snapshot of the example shop database, read only)
+**[Live demo](https://stephen-smh.github.io/sqlmal/)** (a saved snapshot of the example shop database, read only)
 
 ![Schema diagram with the orders table selected](docs/img/schema.png)
 
@@ -33,7 +33,7 @@ The UI follows your system theme and has a light mode:
 You need Go 1.27+, Docker, and `psql`.
 
 ```bash
-git clone https://github.com/Stephen-SMH/migrate-studio && cd migrate-studio
+git clone https://github.com/Stephen-SMH/sqlmal && cd sqlmal
 make demo        # starts Postgres, builds the shop example, opens http://127.0.0.1:8484
 ```
 
@@ -42,14 +42,14 @@ The example has 14 migrations with a few deliberate flaws for the tools to find,
 ## Use it on your own database
 
 ```bash
-go install github.com/Stephen-SMH/migrate-studio/cmd/migrate-studio@latest
+go install github.com/Stephen-SMH/sqlmal/cmd/sqlmal@latest
 
 export DATABASE_URL=postgres://user:pass@localhost:5432/mydb
-migrate-studio init            # creates ./migrations and migrate-studio.json
-migrate-studio new create_users
-migrate-studio up --dry-run    # run everything in one transaction, then roll it back
-migrate-studio up
-migrate-studio serve           # http://127.0.0.1:8484
+sqlmal init            # creates ./migrations and sqlmal.json
+sqlmal new create_users
+sqlmal up --dry-run    # run everything in one transaction, then roll it back
+sqlmal up
+sqlmal serve           # http://127.0.0.1:8484
 ```
 
 | Command | What it does |
@@ -85,7 +85,7 @@ Two directives go in a comment in the file:
 
 ### Several databases
 
-`migrate-studio.json`:
+`sqlmal.json`:
 
 ```json
 {
@@ -99,12 +99,12 @@ Connection strings are read from environment variables, so the config file is sa
 
 ## Safety
 
-Migrate Studio can change a database, so the server is locked down by default:
+SQLMal can change a database, so the server is locked down by default:
 
 - **Read only** until you pass `--allow-write`.
 - Listens on **loopback only**. Binding to any other address is refused unless you set `--token`.
 - With a token, every request needs `Authorization: Bearer ...` (compared in constant time).
-- Writes also need a custom `X-Migrate-Studio` header, and the `Origin` and `Host` headers are checked, to stop other websites and DNS-rebinding tricks from driving it.
+- Writes also need a custom `X-SQLMal` header, and the `Origin` and `Host` headers are checked, to stop other websites and DNS-rebinding tricks from driving it.
 - Passwords and connection strings are scrubbed from error messages and responses.
 - The timeline, the reversibility check and the drift check run on a **scratch database** that is created and dropped for you. Your data is not read or modified. Drift reads catalog metadata only. This needs permission to `CREATE DATABASE`, or a separate `shadow_admin_dsn_env` in the config. Without that permission the timeline, `verify` and `drift` explain why they can't run, and the migrations, SQL, lint and schema views keep working.
 
@@ -121,10 +121,10 @@ Migrate Studio can change a database, so the server is locked down by default:
 make demo-db     # Postgres on 127.0.0.1:54329 (user and password: studio)
 make test        # go vet + go test -race, then web typecheck + vitest
 make ui          # rebuild the web UI and embed it in the Go binary
-make build       # bin/migrate-studio
+make build       # bin/sqlmal
 ```
 
-The Go integration tests create a throwaway database each, so they need a reachable Postgres (set `MIGRATE_STUDIO_TEST_ADMIN_DSN` to use your own). Without one they skip locally, and fail in CI.
+The Go integration tests create a throwaway database each, so they need a reachable Postgres (set `SQLMAL_TEST_ADMIN_DSN` to use your own). Without one they skip locally, and fail in CI.
 
 The built UI in `internal/server/ui` is committed so `go install` works without Node. Run `make ui` after changing anything in `web/`.
 
@@ -133,7 +133,7 @@ How it works is in [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md).
 ## Layout
 
 ```
-cmd/migrate-studio   the CLI
+cmd/sqlmal   the CLI
 internal/
   migration          file loading, checksums, directives
   sqlsplit           splits SQL into statements (quotes, $$ bodies, comments)

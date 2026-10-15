@@ -21,8 +21,8 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 
-	"github.com/Stephen-SMH/migrate-studio/internal/migration"
-	"github.com/Stephen-SMH/migrate-studio/internal/sqlsplit"
+	"github.com/Stephen-SMH/sqlmal/internal/migration"
+	"github.com/Stephen-SMH/sqlmal/internal/sqlsplit"
 )
 
 var (
@@ -141,7 +141,7 @@ func (e *Engine) lockKey(ctx context.Context) int64 {
 	var db string
 	_ = e.conn.QueryRow(ctx, `SELECT current_database()`).Scan(&db)
 	h := fnv.New64a()
-	h.Write([]byte("migrate-studio:" + db))
+	h.Write([]byte("sqlmal:" + db))
 	return int64(h.Sum64() >> 1)
 }
 

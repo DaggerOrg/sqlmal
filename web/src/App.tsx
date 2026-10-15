@@ -34,7 +34,7 @@ export default function App() {
   const page = parts[0] ?? "";
   useEffect(() => {
     const label = NAV.find((n) => n.to === page)?.label ?? "Not found";
-    document.title = `${label} · Migrate Studio`;
+    document.title = `${label} · SQLMal`;
   }, [page]);
 
   if (error instanceof ApiError && error.code === "unauthorized") {
@@ -58,7 +58,7 @@ export default function App() {
       </nav>
       <div className="main">
         <header className="topbar">
-          <b style={{ letterSpacing: "-0.02em" }}>Migrate Studio</b>
+          <b style={{ letterSpacing: "-0.02em" }}>SQLMal</b>
           {api && <Chip tone="brand" icon={<Database size={14} weight="fill" aria-hidden />}>{api.database}</Chip>}
           {api && (api.info.static ? <Chip tone="info">Snapshot</Chip> : api.info.read_only ? <Chip>Read only</Chip> : <Chip tone="warn">Writes on</Chip>)}
           <span className="grow" />

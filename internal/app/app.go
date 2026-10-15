@@ -15,13 +15,13 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"github.com/Stephen-SMH/migrate-studio/internal/config"
-	"github.com/Stephen-SMH/migrate-studio/internal/diff"
-	"github.com/Stephen-SMH/migrate-studio/internal/engine"
-	"github.com/Stephen-SMH/migrate-studio/internal/introspect"
-	"github.com/Stephen-SMH/migrate-studio/internal/lint"
-	"github.com/Stephen-SMH/migrate-studio/internal/migration"
-	"github.com/Stephen-SMH/migrate-studio/internal/shadow"
+	"github.com/Stephen-SMH/sqlmal/internal/config"
+	"github.com/Stephen-SMH/sqlmal/internal/diff"
+	"github.com/Stephen-SMH/sqlmal/internal/engine"
+	"github.com/Stephen-SMH/sqlmal/internal/introspect"
+	"github.com/Stephen-SMH/sqlmal/internal/lint"
+	"github.com/Stephen-SMH/sqlmal/internal/migration"
+	"github.com/Stephen-SMH/sqlmal/internal/shadow"
 )
 
 var ErrUnknownDB = errors.New("unknown database")

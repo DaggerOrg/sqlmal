@@ -2,7 +2,7 @@ import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 
 // base "./" lets the same build run from the Go binary (served at /) and from
-// GitHub Pages (served under /migrate-studio/).
+// GitHub Pages (served under /sqlmal/).
 export default defineConfig({
   base: "./",
   plugins: [react()],

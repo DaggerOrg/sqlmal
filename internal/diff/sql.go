@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/Stephen-SMH/migrate-studio/internal/introspect"
+	"github.com/Stephen-SMH/sqlmal/internal/introspect"
 )
 
 var plainIdent = regexp.MustCompile(`^[a-z_][a-z0-9_]*$`)

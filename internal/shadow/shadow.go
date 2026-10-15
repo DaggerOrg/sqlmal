@@ -15,10 +15,10 @@ import (
 
 	"github.com/jackc/pgx/v5"
 
-	"github.com/Stephen-SMH/migrate-studio/internal/diff"
-	"github.com/Stephen-SMH/migrate-studio/internal/engine"
-	"github.com/Stephen-SMH/migrate-studio/internal/introspect"
-	"github.com/Stephen-SMH/migrate-studio/internal/migration"
+	"github.com/Stephen-SMH/sqlmal/internal/diff"
+	"github.com/Stephen-SMH/sqlmal/internal/engine"
+	"github.com/Stephen-SMH/sqlmal/internal/introspect"
+	"github.com/Stephen-SMH/sqlmal/internal/migration"
 )
 
 // Scratch is a temporary database. Always Close it.
