@@ -1,0 +1,2 @@
+<!-- prettier-ignore -->
+<pre class="sql-code" tabindex="0" [attr.aria-label]="label()"><code>@for (line of lines(); track line.lineNumber) {<span class="sql-line" [class.highlighted]="line.isHighlighted"><span class="line-number" aria-hidden="true">{{ line.lineNumber }}</span>@for (token of line.tokens; track $index) {<span [class]="token.kind">{{ token.text }}</span>}</span>}</code></pre>

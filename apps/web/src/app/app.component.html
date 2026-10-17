@@ -1,0 +1,69 @@
+@if (needsAccessToken()) {
+  <app-token-prompt (tokenSubmit)="retryConnection()" />
+} @else {
+  <div class="shell">
+    <a class="skip-link" href="#main" (click)="skipToContent($event, mainElement)">Skip to content</a>
+    <nav class="rail" aria-label="Main">
+      <div class="logo" aria-hidden="true">
+        <ng-icon [svg]="icons.phosphorDatabaseFill" size="26" />
+      </div>
+      @for (item of navigationItems; track item.section) {
+        <a
+          class="rail-link"
+          [routerLink]="['/', item.section]"
+          [attr.data-tooltip]="item.label"
+          [attr.aria-label]="item.label"
+          [attr.aria-current]="activeSection() === item.section ? 'page' : null"
+        >
+          <ng-icon
+            [svg]="activeSection() === item.section ? item.activeIconSvg : item.iconSvg"
+            size="24"
+            aria-hidden="true"
+          />
+        </a>
+      }
+      <div class="grow"></div>
+      <button
+        type="button"
+        class="icon-button"
+        [attr.aria-label]="isDarkTheme() ? 'Switch to light mode' : 'Switch to dark mode'"
+        (click)="toggleTheme()"
+      >
+        <ng-icon [svg]="isDarkTheme() ? icons.phosphorSun : icons.phosphorMoon" size="22" aria-hidden="true" />
+      </button>
+    </nav>
+    <div class="main">
+      <header class="topbar">
+        <b class="brand">SQLMal</b>
+        @if (serverInfo(); as serverInfo) {
+          <app-chip tone="brand">
+            <ng-icon [svg]="icons.phosphorDatabaseFill" size="14" aria-hidden="true" />
+            {{ databaseName() }}
+          </app-chip>
+          @if (serverInfo.isStaticSnapshot) {
+            <app-chip tone="info">Snapshot</app-chip>
+          } @else if (serverInfo.isReadOnly) {
+            <app-chip>Read only</app-chip>
+          } @else {
+            <app-chip tone="warning">Writes on</app-chip>
+          }
+        }
+        <span class="grow"></span>
+        @if (serverInfo(); as serverInfo) {
+          @if (!serverInfo.isStaticSnapshot) {
+            <span class="faint mono server-version">{{ serverVersionLabel() }}</span>
+          }
+        }
+      </header>
+      <main id="main" class="page" tabindex="-1" #mainElement>
+        @if (connection.error(); as connectionError) {
+          <app-error-box [error]="connectionError" (retry)="retryConnection()" />
+        } @else if (connection.hasValue()) {
+          <router-outlet />
+        } @else {
+          <app-loading-skeleton [lineCount]="6" />
+        }
+      </main>
+    </div>
+  </div>
+}

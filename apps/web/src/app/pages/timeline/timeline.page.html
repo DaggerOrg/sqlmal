@@ -1,0 +1,111 @@
+@if (timeline.error(); as loadError) {
+  <app-error-box [error]="loadError" (retry)="timeline.reload()" />
+} @else if (!timeline.hasValue()) {
+  <app-loading-skeleton [lineCount]="8" />
+} @else if (steps().length === 0) {
+  <app-empty-state
+    heading="No migrations to replay"
+    hint="Add a migration and the timeline will show the schema after each one."
+  />
+} @else {
+  <app-page-header
+    heading="Timeline"
+    description="The schema after every migration, built on a scratch database. Your own data is never touched."
+  />
+
+  <section class="panel timeline-controls" aria-label="Timeline controls">
+    <div class="row spread">
+      <div class="row">
+        <button
+          type="button"
+          class="icon-button"
+          aria-label="Previous migration"
+          [disabled]="position() === 0"
+          (click)="stepBack()"
+        >
+          <ng-icon [svg]="icons.phosphorSkipBack" size="20" aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          class="icon-button"
+          [attr.aria-label]="isPlaying() ? 'Pause' : 'Play'"
+          (click)="togglePlayback()"
+        >
+          <ng-icon [svg]="isPlaying() ? icons.phosphorPauseFill : icons.phosphorPlayFill" size="20" aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          class="icon-button"
+          aria-label="Next migration"
+          [disabled]="position() === steps().length"
+          (click)="stepForward()"
+        >
+          <ng-icon [svg]="icons.phosphorSkipForward" size="20" aria-hidden="true" />
+        </button>
+      </div>
+      <b class="mono step-title">{{ currentStepTitle() }}</b>
+    </div>
+    <input
+      type="range"
+      min="0"
+      [max]="steps().length"
+      [value]="position()"
+      aria-label="Migration"
+      [attr.aria-valuetext]="sliderValueText()"
+      (input)="scrubTo($event)"
+    />
+    <div class="ticks" aria-hidden="true">
+      @for (tick of ticks(); track tick.version) {
+        <span
+          class="tick"
+          [class.reached]="tick.isReached"
+          [class.failed]="tick.isFailed"
+          [class.irreversible]="tick.isIrreversible"
+        ></span>
+      }
+    </div>
+  </section>
+
+  <div class="schema-grid with-side-panel">
+    <app-schema-diagram
+      [tables]="currentTables()"
+      [removedTables]="removedTables()"
+      [boxesByTableName]="boxesByTableName()"
+      [tableMarks]="changeMarks().tableMarks"
+      [columnMarks]="changeMarks().columnMarks"
+      [label]="diagramLabel()"
+      [fitKey]="databaseName"
+    />
+    <aside class="panel side-panel padded" aria-label="This step">
+      @if (currentStep(); as step) {
+        <h2 class="step-heading">What this step did</h2>
+        <div class="row">
+          <app-chip>{{ currentTables().length | pluralize: 'table' }}</app-chip>
+          <app-chip>{{ step.applyDurationMs }} ms</app-chip>
+          @if (step.isReversible === true) {
+            <app-chip tone="success">undo verified</app-chip>
+          } @else if (step.isReversible === false) {
+            <app-chip tone="danger">undo incomplete</app-chip>
+          } @else {
+            <app-chip>undo not checked</app-chip>
+          }
+        </div>
+        <app-schema-change-list [changes]="step.changes" />
+        @if (step.errorMessage) {
+          <div class="error-box" role="alert">Failed: {{ step.errorMessage }}</div>
+        }
+        @if (step.isReversible === false && step.reversibilityNote) {
+          <p class="muted">{{ step.reversibilityNote | capitalizeFirstLetter }}</p>
+        }
+      } @else {
+        <h2 class="step-heading">Start</h2>
+        <p class="muted">Nothing exists yet. Press play or drag the slider.</p>
+      }
+      <div class="legend" aria-hidden="true">
+        <span><i class="legend-swatch added"></i>new</span>
+        <span><i class="legend-swatch changed"></i>changed</span>
+        <span><i class="legend-swatch removed"></i>removed</span>
+      </div>
+    </aside>
+  </div>
+}

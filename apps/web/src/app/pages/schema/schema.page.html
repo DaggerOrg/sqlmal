@@ -1,0 +1,51 @@
+@if (schema.error(); as loadError) {
+  <app-error-box [error]="loadError" (retry)="schema.reload()" />
+} @else if (!schema.hasValue()) {
+  <app-loading-skeleton [lineCount]="8" />
+} @else if (tables().length === 0) {
+  <app-empty-state heading="The schema is empty" hint="Apply a migration and its tables will appear here." />
+} @else {
+  <app-page-header heading="Schema" [description]="description()">
+    <label class="search">
+      <ng-icon [svg]="icons.phosphorMagnifyingGlass" size="18" aria-hidden="true" />
+      <input
+        type="search"
+        placeholder="Find a table or column"
+        aria-label="Find a table or column"
+        [value]="searchText()"
+        (input)="updateSearchText($event)"
+      />
+    </label>
+  </app-page-header>
+  <div class="schema-grid" [class.with-side-panel]="selectedTable()">
+    <app-schema-diagram
+      [tables]="tables()"
+      [boxesByTableName]="boxesByTableName()"
+      [selectedTableName]="selectedTableName()"
+      [label]="diagramLabel()"
+      [fitKey]="databaseName"
+      [dimmedTableNames]="dimmedTableNames()"
+      (selectionChange)="selectTable($event)"
+    />
+    @if (selectedTable(); as table) {
+      <aside class="panel side-panel padded" [attr.aria-label]="'Details for ' + table.name">
+        <button type="button" class="icon-button close-button" aria-label="Close details" (click)="selectTable(null)">
+          <ng-icon [svg]="icons.phosphorX" size="20" aria-hidden="true" />
+        </button>
+        <app-table-detail [table]="table" [allTables]="tables()" />
+      </aside>
+    }
+  </div>
+  @if (enums().length > 0) {
+    <section class="panel stack padded" aria-label="Enums">
+      <h2 class="enums-heading">Enums</h2>
+      @for (enumType of enums(); track enumType.name) {
+        <p>
+          <b class="mono">{{ enumType.name }}</b>&ngsp;<span class="muted mono enum-labels">{{
+            enumType.labels.join(' | ')
+          }}</span>
+        </p>
+      }
+    </section>
+  }
+}

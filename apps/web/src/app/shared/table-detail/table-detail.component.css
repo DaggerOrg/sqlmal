@@ -1,0 +1,23 @@
+.table-heading {
+  font-size: 1.3rem;
+}
+.table-facts {
+  margin-top: 0.4rem;
+}
+.table-comment {
+  margin-top: 0.6rem;
+}
+.section-heading {
+  margin-bottom: 0.4rem;
+}
+.column-notes {
+  gap: 0.3rem;
+}
+.default-expression {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.index-definition {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}

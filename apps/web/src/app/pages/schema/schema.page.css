@@ -1,0 +1,30 @@
+.search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0 1rem;
+  border-radius: 9999px;
+  border: 1px solid var(--rule);
+  background: var(--paper-raised);
+}
+.search input {
+  border: 0;
+  background: transparent;
+  min-width: 0;
+  width: min(60vw, 260px);
+  min-height: 40px;
+  outline: none;
+}
+.search:focus-within {
+  border-color: var(--accent);
+}
+.close-button {
+  justify-self: end;
+}
+.enums-heading {
+  font-size: 1.1rem;
+}
+.enum-labels {
+  font-size: 13px;
+}

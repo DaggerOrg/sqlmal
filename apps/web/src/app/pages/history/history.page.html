@@ -1,0 +1,54 @@
+@if (history.error(); as loadError) {
+  <app-error-box [error]="loadError" (retry)="history.reload()" />
+} @else if (!history.hasValue()) {
+  <app-loading-skeleton [lineCount]="6" />
+} @else {
+  <app-page-header heading="History" description="Every run, including failures and rollbacks, newest first." />
+  @if (history.value().length === 0) {
+    <app-empty-state heading="Nothing has run yet" hint="Applied and rolled back migrations are listed here." />
+  } @else {
+    <div class="panel table-scroll history-panel" role="region" aria-label="Migration runs" tabindex="0">
+      <table class="data-table history-table">
+        <thead>
+          <tr>
+            <th scope="col">Result</th>
+            <th scope="col">Migration</th>
+            <th scope="col">Direction</th>
+            <th scope="col">When</th>
+            <th scope="col">Took</th>
+            <th scope="col">By</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (entry of history.value(); track entry.id) {
+            <tr>
+              <td>
+                @if (entry.isSuccess) {
+                  <span class="row result">
+                    <ng-icon [svg]="icons.phosphorCheckCircleFill" size="18" color="var(--success)" aria-hidden="true" />
+                    ok
+                  </span>
+                } @else {
+                  <span class="row result">
+                    <ng-icon [svg]="icons.phosphorXCircleFill" size="18" color="var(--destructive)" aria-hidden="true" />
+                    failed
+                  </span>
+                }
+              </td>
+              <td>
+                {{ entry.version | versionLabel }} {{ entry.name }}
+                @if (entry.errorMessage) {
+                  <div class="faint run-error">{{ entry.errorMessage }}</div>
+                }
+              </td>
+              <td>{{ entry.direction }}</td>
+              <td>{{ entry.startedAt | timestamp }}</td>
+              <td>{{ entry.durationMs }} ms</td>
+              <td>{{ entry.appliedBy }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+}

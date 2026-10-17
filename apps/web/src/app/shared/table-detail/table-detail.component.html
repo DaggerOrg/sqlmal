@@ -1,0 +1,124 @@
+<div class="stack">
+  <div>
+    <h2 class="mono table-heading">{{ table().name }}</h2>
+    <div class="row table-facts">
+      <app-chip>{{ table().estimatedRowCount | compactCount }} rows (estimate)</app-chip>
+      <app-chip>{{ table().totalSizeBytes | byteSize }} on disk</app-chip>
+      @if (table().isPartitioned) {
+        <app-chip tone="info">partitioned</app-chip>
+      }
+    </div>
+    @if (table().comment) {
+      <p class="muted table-comment">{{ table().comment }}</p>
+    }
+  </div>
+
+  <section aria-label="Columns">
+    <h3 class="mono-label section-heading">Columns</h3>
+    <div class="table-scroll" role="region" aria-label="Column list" tabindex="0">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Type</th>
+            <th scope="col">Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (column of table().columns; track column.name) {
+            <tr>
+              <td>{{ column.name }}</td>
+              <td class="mono">{{ column.type }}</td>
+              <td>
+                <span class="row column-notes">
+                  @if (primaryKeyColumnNames().has(column.name)) {
+                    <app-chip tone="warning">primary key</app-chip>
+                  }
+                  @if (column.isNotNull && !primaryKeyColumnNames().has(column.name)) {
+                    <app-chip>not null</app-chip>
+                  }
+                  @if (column.identity) {
+                    <app-chip tone="info">identity</app-chip>
+                  }
+                  @if (column.generatedExpression) {
+                    <app-chip tone="info">generated</app-chip>
+                  }
+                  @if (column.defaultExpression) {
+                    <span class="faint mono default-expression">default {{ column.defaultExpression }}</span>
+                  }
+                </span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  @if (table().foreignKeys.length > 0) {
+    <section aria-label="References">
+      <h3 class="mono-label section-heading">References</h3>
+      <ul class="stack plain-list">
+        @for (foreignKey of table().foreignKeys; track foreignKey.name) {
+          <li>
+            <span class="mono">{{ foreignKey.columns.join(', ') }}</span> →
+            <b class="mono">{{ foreignKey.referencedTable }}</b>(<span class="mono">{{
+              foreignKey.referencedColumns.join(', ')
+            }}</span
+            >) <span class="faint">on delete {{ foreignKey.onDelete.toLowerCase() }}</span>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  @if (referencingForeignKeys().length > 0) {
+    <section aria-label="Referenced by">
+      <h3 class="mono-label section-heading">Referenced by</h3>
+      <ul class="stack plain-list">
+        @for (reference of referencingForeignKeys(); track reference.referencingTableName + reference.foreignKey.name) {
+          <li>
+            <b class="mono">{{ reference.referencingTableName }}</b>.<span class="mono">{{
+              reference.foreignKey.columns.join(', ')
+            }}</span>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  @if (table().uniqueConstraints.length > 0 || table().checkConstraints.length > 0) {
+    <section aria-label="Constraints">
+      <h3 class="mono-label section-heading">Constraints</h3>
+      <ul class="stack plain-list">
+        @for (uniqueConstraint of table().uniqueConstraints; track uniqueConstraint.name) {
+          <li>
+            unique <span class="mono">({{ uniqueConstraint.columns.join(', ') }})</span>
+          </li>
+        }
+        @for (checkConstraint of table().checkConstraints; track checkConstraint.name) {
+          <li>
+            check <span class="mono">{{ checkConstraint.expression }}</span>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  @if (secondaryIndexes().length > 0) {
+    <section aria-label="Indexes">
+      <h3 class="mono-label section-heading">Indexes</h3>
+      <ul class="stack plain-list">
+        @for (index of secondaryIndexes(); track index.name) {
+          <li>
+            <b class="mono">{{ index.name }}</b>&ngsp;<app-chip>{{ index.method }}</app-chip>
+            @if (index.isUnique) {
+              <app-chip tone="info">unique</app-chip>
+            }
+            <div class="faint mono index-definition">{{ describeIndexDefinition(index.definition) }}</div>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+</div>

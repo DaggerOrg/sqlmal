@@ -3,7 +3,7 @@ name: Demo site
 on:
   push:
     branches: [main]
-    paths: ["web/**", ".github/workflows/pages.yml"]
+    paths: ["apps/web/**", "packages/contracts/**", ".github/workflows/pages.yml"]
   workflow_dispatch:
 
 permissions:
@@ -27,12 +27,11 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: web/package-lock.json
-      - run: npm ci && npm run build
-        working-directory: web
+      - run: npm ci
+      - run: npm run build -w @sqlmal/web
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: web/dist
+          path: apps/web/dist/browser
       - id: deployment
         uses: actions/deploy-pages@v4

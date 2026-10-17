@@ -1,0 +1,7 @@
+dist
+coverage
+.angular
+node_modules
+apps/server/ui
+apps/web/public/demo.json
+package-lock.json

@@ -1,0 +1,119 @@
+@if (overviewData.error(); as loadError) {
+  <app-error-box [error]="loadError" (retry)="overviewData.reload()" />
+} @else if (summary(); as summary) {
+  <section class="panel-dark hero" aria-label="Summary">
+    <div class="chips">
+      <app-chip tone="brand">
+        <ng-icon [svg]="icons.phosphorDatabaseFill" size="14" aria-hidden="true" />
+        {{ databaseName }}
+      </app-chip>
+      @if (serverInfo.isStaticSnapshot) {
+        <app-chip tone="info">Saved snapshot</app-chip>
+      } @else if (serverInfo.isReadOnly) {
+        <app-chip tone="info">Read only</app-chip>
+      } @else {
+        <app-chip tone="warning">Writes enabled</app-chip>
+      }
+    </div>
+    <h1>
+      {{ summary.problemCount === 0 ? 'Everything lines up.' : (summary.problemCount | pluralize: 'thing') + ' to look at.' }}
+    </h1>
+    <p>
+      {{ summary.migrationCount | pluralize: 'migration' }}, {{ summary.stateCounts.applied }} applied and
+      {{ summary.stateCounts.pending }} waiting. {{ summary.tableCount }} tables in the live schema.
+      @if (summary.lastAppliedAt) {
+        Last change {{ summary.lastAppliedAt | timestamp }}.
+      }
+    </p>
+    <div class="kpis">
+      <div class="kpi glass-in">
+        <b>{{ summary.stateCounts.applied }}</b><span>applied</span>
+      </div>
+      <div class="kpi glass-in">
+        <b>{{ summary.stateCounts.pending }}</b><span>pending</span>
+      </div>
+      <div class="kpi glass-in">
+        <b>{{ summary.tableCount }}</b><span>tables</span>
+      </div>
+      <div class="kpi glass-in">
+        <b>{{ summary.driftValueLabel }}</b><span>{{ summary.driftCaption }}</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="overview-columns">
+    <section class="stack" aria-labelledby="needs-attention-heading">
+      <h2 id="needs-attention-heading" class="section-heading">Needs attention</h2>
+      @if (summary.problemCount === 0 && !summary.unavailableReason) {
+        <p class="muted">Nothing is flagged. Migrations are intact, reversible and match the live database.</p>
+      }
+      @if (summary.unavailableReason) {
+        <p class="muted" role="note">
+          Timeline, reversibility and drift checks are unavailable: {{ summary.unavailableReason }}
+        </p>
+      }
+      <ul class="attention-list">
+        @if (summary.stateCounts.modified > 0) {
+          <li>
+            <ng-icon [svg]="icons.phosphorWarningFill" size="20" color="var(--destructive)" aria-hidden="true" />
+            <span
+              >{{ summary.stateCounts.modified | pluralize: 'migration' }} edited after being applied.
+              <a routerLink="/migrations">Review them</a></span
+            >
+          </li>
+        }
+        @if (summary.stateCounts.missing > 0) {
+          <li>
+            <ng-icon [svg]="icons.phosphorWarningFill" size="20" color="var(--destructive)" aria-hidden="true" />
+            <span
+              >{{ summary.stateCounts.missing | pluralize: 'applied migration' }} no longer have a file.
+              <a routerLink="/migrations">Review them</a></span
+            >
+          </li>
+        }
+        @if (summary.drift && summary.hasDrift) {
+          <li>
+            <ng-icon [svg]="icons.phosphorGitBranchFill" size="20" color="var(--warning)" aria-hidden="true" />
+            <span
+              >The live database differs from the migrations by
+              {{ summary.drift.changes.length | pluralize: 'change' }}.
+              <a routerLink="/drift">See the drift</a></span
+            >
+          </li>
+        }
+        @for (step of summary.irreversibleSteps; track step.version) {
+          <li>
+            <ng-icon [svg]="icons.phosphorWarningFill" size="20" color="var(--warning)" aria-hidden="true" />
+            <span
+              >Migration {{ step.version | versionLabel }} {{ step.name }} does not fully undo itself.
+              <a [routerLink]="['/timeline', step.version]">Open on the timeline</a></span
+            >
+          </li>
+        }
+      </ul>
+      @if (summary.listedFindings.length > 0) {
+        <ul class="stack plain-list">
+          @for (finding of summary.listedFindings; track $index) {
+            <li class="lint-finding">
+              <app-lint-finding [finding]="finding" [shouldShowFile]="true" />
+            </li>
+          }
+        </ul>
+      }
+    </section>
+
+    <section class="stack" aria-labelledby="explore-heading">
+      <h2 id="explore-heading" class="section-heading">Explore</h2>
+      @for (exploreLink of exploreLinks; track exploreLink.section) {
+        <a class="explore-link" [routerLink]="['/', exploreLink.section]">
+          <span
+            ><b>{{ exploreLink.heading }}</b><span class="muted explore-description">{{ exploreLink.description }}</span></span
+          >
+          <ng-icon [svg]="icons.phosphorArrowRight" size="20" aria-hidden="true" />
+        </a>
+      }
+    </section>
+  </div>
+} @else {
+  <app-loading-skeleton [lineCount]="6" />
+}

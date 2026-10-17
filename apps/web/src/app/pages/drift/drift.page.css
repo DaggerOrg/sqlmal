@@ -1,0 +1,19 @@
+.in-sync {
+  padding: 2rem;
+}
+.in-sync-heading {
+  font-size: 1.8rem;
+  margin: 0.6rem 0 0.3rem;
+}
+.in-sync-text {
+  color: rgba(255, 255, 255, 0.8);
+}
+.fix-heading {
+  font-size: 1.2rem;
+}
+.sql-heading {
+  font-size: 1.05rem;
+}
+.warning-list {
+  margin: 0;
+}

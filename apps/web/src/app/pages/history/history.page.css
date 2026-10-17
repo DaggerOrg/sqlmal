@@ -1,0 +1,13 @@
+.history-panel {
+  padding: 0.5rem 1rem;
+}
+.history-table td:nth-child(2) {
+  font-family: var(--font-mono);
+}
+.result {
+  gap: 0.35rem;
+}
+.run-error {
+  font-family: var(--font-sans);
+  overflow-wrap: anywhere;
+}

@@ -1,0 +1,35 @@
+{
+  "name": "sqlmal-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SQLMal: PostgreSQL migrations you can see.",
+  "license": "MIT",
+  "workspaces": [
+    "packages/contracts",
+    "apps/server",
+    "apps/web"
+  ],
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "build": "npm run build -w @sqlmal/web && npm run build -w sqlmal",
+    "test": "npm test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "demo:db": "docker compose up -d --wait",
+    "demo": "npm run demo:db && npm run build && ./scripts/demo.sh"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "angular-eslint": "^22.6.0",
+    "eslint": "^10.12.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10",
+    "typescript": "~6.0.2",
+    "typescript-eslint": "^8.71.2"
+  }
+}

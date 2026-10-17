@@ -1,0 +1,224 @@
+@if (migrationData.error(); as loadError) {
+  <app-error-box [error]="loadError" (retry)="migrationData.reload()" />
+} @else if (!migrationData.hasValue()) {
+  <app-loading-skeleton [lineCount]="8" />
+} @else if (statusesNewestFirst().length === 0) {
+  <app-empty-state heading="No migrations yet" hint="Create one with: sqlmal new add_users" />
+} @else {
+  <app-page-header
+    heading="Migrations"
+    [description]="(statusesNewestFirst().length | pluralize: 'migration') + '. Pick one to read its SQL and see what it changes.'"
+  />
+  <div class="split">
+    <nav aria-label="Migrations" class="panel-dark migration-nav">
+      <ul class="migration-list">
+        @for (status of statusesNewestFirst(); track status.version) {
+          <li>
+            <button
+              type="button"
+              class="migration-row"
+              [attr.aria-current]="status.version === selectedVersion()"
+              (click)="selectMigration(status.version)"
+            >
+              <span class="state-dot" [class]="status.state" aria-hidden="true"></span>
+              <span class="migration-text">
+                <span class="migration-name">{{ status.name | migrationName }}</span>
+                <span class="migration-version">{{ status.version | versionLabel }} · {{ status.state }}</span>
+              </span>
+              <span class="migration-flags">
+                @if (status.isNonTransactional) {
+                  <app-chip>no tx</app-chip>
+                }
+                @if (!status.hasDown) {
+                  <app-chip tone="warning">no down</app-chip>
+                }
+              </span>
+            </button>
+          </li>
+        }
+      </ul>
+    </nav>
+
+    @if (selected(); as selected) {
+      <section class="stack" [attr.aria-label]="describeVersion(selected.status.version)">
+        <div class="stack panel padded">
+          <div class="row spread">
+            <h2 class="migration-heading">
+              {{ selected.status.version | versionLabel }} · {{ selected.status.name | migrationName }}
+            </h2>
+            <app-migration-state-chip [state]="selected.status.state" />
+          </div>
+          <div class="row">
+            @if (selected.status.appliedAt) {
+              <app-chip>Applied {{ selected.status.appliedAt | timestamp }}</app-chip>
+            }
+            @if (selected.status.durationMs !== undefined && selected.status.state !== 'pending') {
+              <app-chip>{{ selected.status.durationMs }} ms</app-chip>
+            }
+            @if (selected.status.appliedBy) {
+              <app-chip>by {{ selected.status.appliedBy }}</app-chip>
+            }
+            @if (selected.status.isNonTransactional) {
+              <app-chip tone="info">runs outside a transaction</app-chip>
+            }
+            @if (selected.migration.isIrreversible) {
+              <app-chip tone="info">one-way by design</app-chip>
+            }
+            @if (selected.step?.isReversible === true) {
+              <app-chip tone="success">verified reversible</app-chip>
+            }
+            @if (selected.step?.isReversible === false) {
+              <app-chip tone="danger">not fully reversible</app-chip>
+            }
+            @if (selected.status.isOutOfOrder) {
+              <app-chip tone="warning">applied out of order</app-chip>
+            }
+          </div>
+          @if (selected.status.state === 'modified') {
+            <div class="error-box" role="alert">
+              The file was edited after it was applied, so the database ran a different version than the one on
+              disk.
+            </div>
+          }
+
+          @if (canWrite) {
+            <div class="row" role="group" aria-label="Actions">
+              @if (selected.status.state === 'pending') {
+                <button
+                  type="button"
+                  class="button button-small"
+                  [disabled]="runState().isRunning"
+                  (click)="runMigrations('up', true)"
+                >
+                  <ng-icon [svg]="icons.phosphorEye" size="18" aria-hidden="true" /> Dry run
+                </button>
+                <button
+                  type="button"
+                  class="button button-small button-gradient"
+                  [disabled]="runState().isRunning"
+                  (click)="runMigrations('up', false)"
+                >
+                  <ng-icon [svg]="icons.phosphorPlayFill" size="18" aria-hidden="true" /> Apply up to here
+                </button>
+              }
+              @if (selected.status.state === 'applied') {
+                <button
+                  type="button"
+                  class="button button-small"
+                  [disabled]="runState().isRunning"
+                  (click)="runMigrations('down', true)"
+                >
+                  <ng-icon [svg]="icons.phosphorEye" size="18" aria-hidden="true" /> Dry run rollback
+                </button>
+                <button
+                  type="button"
+                  class="button button-small button-danger"
+                  [disabled]="runState().isRunning || !selected.migration.hasDown"
+                  (click)="runMigrations('down', false)"
+                >
+                  <ng-icon [svg]="icons.phosphorArrowCounterClockwise" size="18" aria-hidden="true" /> Roll back to
+                  before this
+                </button>
+              }
+            </div>
+          } @else {
+            <p class="faint read-only-note">
+              {{
+                serverInfo.isStaticSnapshot
+                  ? 'This is a saved snapshot, so it is read only.'
+                  : 'Read only. Start the server with --allow-write to run migrations from here.'
+              }}
+            </p>
+          }
+          <div aria-live="polite">
+            @if (runState().errorMessage; as runErrorMessage) {
+              <div class="error-box" role="alert">{{ runErrorMessage }}</div>
+            }
+            @if (runState().response; as runResponse) {
+              <div
+                [class]="hasRunFailed() ? 'error-box' : 'success-box'"
+                [attr.role]="hasRunFailed() ? 'alert' : 'status'"
+              >
+                @if (runResponse.message) {
+                  <p>{{ runResponse.message }}</p>
+                }
+                <ul class="run-results">
+                  @for (result of runResponse.results; track result.version + result.direction) {
+                    <li>{{ describeRunResult(result) }}</li>
+                  }
+                </ul>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="stack panel padded">
+          <div class="tabs" role="tablist" aria-label="Direction">
+            @for (direction of migrationDirections; track direction) {
+              <button
+                type="button"
+                role="tab"
+                class="tab"
+                [attr.aria-selected]="selectedDirection() === direction"
+                (click)="selectedDirection.set(direction)"
+              >
+                {{ direction === 'up' ? 'Up' : 'Down' }}
+              </button>
+            }
+          </div>
+          @if (selectedDirection() === 'down' && !selected.migration.hasDown) {
+            <p class="muted">
+              {{
+                selected.migration.isIrreversible
+                  ? 'This migration is one-way on purpose, so it has no down file.'
+                  : 'There is no down file for this migration.'
+              }}
+            </p>
+          } @else if (visibleSql(); as visibleSql) {
+            <app-sql-code-view
+              [sql]="visibleSql.sql"
+              [highlightedLineNumbers]="visibleSql.lintLineNumbers"
+              [label]="visibleSql.label"
+            />
+          }
+        </div>
+
+        @if (selected.migration.lintFindings.length > 0) {
+          <div class="stack panel padded">
+            <h3 class="panel-heading">Lint ({{ selected.migration.lintFindings.length }})</h3>
+            <ul class="stack plain-list">
+              @for (finding of selected.migration.lintFindings; track $index) {
+                <li class="lint-finding">
+                  <app-lint-finding [finding]="finding" [shouldShowFile]="true" />
+                </li>
+              }
+            </ul>
+          </div>
+        }
+
+        <div class="stack panel padded">
+          <h3 class="panel-heading">What it changes</h3>
+          @if (selected.step; as step) {
+            <app-schema-change-list [changes]="step.changes" />
+            @if (step.errorMessage) {
+              <div class="error-box" role="alert">Failed on a clean database: {{ step.errorMessage }}</div>
+            }
+            @if (step.isReversible === false) {
+              <p class="muted">
+                <b>The down does not fully undo the up.</b>
+                {{ step.reversibilityNote ? (step.reversibilityNote | capitalizeFirstLetter) : '' }}
+              </p>
+            }
+            @if (step.reverseDifferences.length > 0) {
+              <app-schema-change-list [changes]="step.reverseDifferences" />
+            }
+          } @else {
+            <p class="muted">Not available for this migration.</p>
+          }
+        </div>
+      </section>
+    } @else {
+      <app-empty-state heading="Migration not found" hint="It may have been removed." />
+    }
+  </div>
+}

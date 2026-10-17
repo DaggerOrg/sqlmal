@@ -1,0 +1,75 @@
+@if (drift.error(); as loadError) {
+  <app-error-box [error]="loadError" (retry)="drift.reload()" />
+} @else if (!drift.hasValue()) {
+  <app-loading-skeleton [lineCount]="6" />
+} @else {
+  <app-page-header
+    heading="Drift"
+    description="Compares your live database with what the applied migrations should have produced."
+  />
+  @let report = drift.value();
+  @if (report.skippedReason) {
+    <app-empty-state heading="Drift check skipped" [hint]="report.skippedReason" />
+  } @else if (report.isInSync) {
+    <section class="panel-dark in-sync">
+      <app-chip tone="success">In sync</app-chip>
+      <h2 class="in-sync-heading">No drift.</h2>
+      <p class="in-sync-text">
+        The live database matches the {{ report.appliedMigrationCount | pluralize: 'applied migration' }}. Nobody has
+        changed it by hand.
+      </p>
+    </section>
+  } @else {
+    <section class="panel stack padded" aria-label="Differences">
+      <div class="row">
+        <app-chip tone="warning">{{ report.changes.length | pluralize: 'difference' }}</app-chip
+        ><span class="muted">Changes needed to turn the migrated schema into the live one.</span>
+      </div>
+      <app-schema-change-list [changes]="report.changes" />
+    </section>
+
+    <section class="panel stack padded" aria-label="Fix">
+      <h2 class="fix-heading">Capture it as a migration</h2>
+      <p class="muted">
+        Generates SQL that records the manual change, with a matching down. Review it before saving it as a file.
+      </p>
+      @let proposal = generation().proposal;
+      @if (!proposal) {
+        <div>
+          <button
+            type="button"
+            class="button button-gradient"
+            [disabled]="generation().isGenerating"
+            (click)="generateMigration()"
+          >
+            {{ generation().isGenerating ? 'Generating' : 'Generate migration' }}
+          </button>
+        </div>
+      }
+      @if (generation().errorMessage; as generationError) {
+        <div class="error-box" role="alert">{{ generationError }}</div>
+      }
+      @if (proposal) {
+        <div class="stack">
+          @if (proposal.up.warnings.length > 0) {
+            <ul class="error-box warning-list">
+              @for (warning of proposal.up.warnings; track warning) {
+                <li>{{ warning }}</li>
+              }
+            </ul>
+          }
+          <div class="row spread">
+            <h3 class="sql-heading">Up</h3>
+            <button type="button" class="button button-small" (click)="copyToClipboard(proposal.up.sql)">
+              <ng-icon [svg]="wasCopied() ? icons.phosphorCheck : icons.phosphorCopy" size="18" aria-hidden="true" />
+              {{ wasCopied() ? 'Copied' : 'Copy' }}
+            </button>
+          </div>
+          <app-sql-code-view [sql]="proposal.up.sql" label="Generated up SQL" />
+          <h3 class="sql-heading">Down</h3>
+          <app-sql-code-view [sql]="proposal.down.sql" label="Generated down SQL" />
+        </div>
+      }
+    </section>
+  }
+}

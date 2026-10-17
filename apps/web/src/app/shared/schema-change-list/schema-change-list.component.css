@@ -1,0 +1,42 @@
+.schema-change-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.schema-change {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  padding: 0.35rem 0;
+  font-size: 14.5px;
+}
+.change-mark {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  min-width: 1.4rem;
+  text-align: center;
+  border-radius: 0.4rem;
+  padding: 0 0.3rem;
+}
+.change-mark.added {
+  color: var(--success-soft-ink);
+  background: var(--success-soft);
+}
+.change-mark.removed {
+  color: var(--destructive-soft-ink);
+  background: var(--destructive-soft);
+}
+.change-mark.changed {
+  color: var(--warning-soft-ink);
+  background: var(--warning-soft);
+}
+.destroys-data {
+  color: var(--destructive-soft-ink);
+  margin-left: 0.5rem;
+  font-size: 12.5px;
+}
+.change-detail {
+  display: block;
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+}

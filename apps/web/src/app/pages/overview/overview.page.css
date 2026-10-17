@@ -1,0 +1,87 @@
+:host {
+  gap: 1.5rem;
+}
+.hero {
+  display: grid;
+  gap: 1.2rem;
+}
+.hero h1 {
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+}
+.hero p {
+  color: rgba(255, 255, 255, 0.78);
+  max-width: 60ch;
+}
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.9rem;
+}
+.kpi {
+  border-radius: 1.4rem;
+  padding: 1rem 1.15rem;
+  display: grid;
+  gap: 0.15rem;
+  color: #fff;
+}
+.kpi b {
+  font-size: 2.1rem;
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+.kpi span {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.78);
+}
+.overview-columns {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+}
+.section-heading {
+  font-size: 1.2rem;
+}
+.attention-list {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+.attention-list li {
+  list-style: none;
+  display: flex;
+  gap: 0.8rem;
+  align-items: flex-start;
+  padding: 0.8rem 1rem;
+  border-radius: 1.1rem;
+  border: 1px solid var(--rule);
+}
+.attention-list a {
+  color: var(--accent-soft-ink);
+}
+.explore-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  min-height: 64px;
+  border-radius: 1.4rem;
+  border: 1px solid var(--rule);
+  color: var(--ink);
+  text-decoration: none;
+  transition:
+    transform 0.3s var(--ease),
+    border-color 0.2s;
+}
+.explore-link:hover {
+  transform: translateY(-3px);
+  border-color: var(--accent);
+}
+.explore-description {
+  display: block;
+}

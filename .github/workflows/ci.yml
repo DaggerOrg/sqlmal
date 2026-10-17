@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  go:
+  check:
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -27,45 +27,18 @@ jobs:
           --health-retries 20
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: go.mod
-      - name: Formatting
-        run: test -z "$(gofmt -l .)"
-      - run: go vet ./...
-      - run: go test -race -timeout 300s ./...
-
-  web:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: web
-    steps:
-      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: web/package-lock.json
       - run: npm ci
+      - name: Formatting
+        run: npm run format:check
+      - run: npm run lint
       - run: npm run typecheck
-      - run: npm test
+      - name: Tests (server unit and PostgreSQL integration, web unit)
+        run: npm test
       - run: npm run build
+      - name: The CLI starts
+        run: node apps/server/dist/main.js version
       - run: npm audit --omit=dev
-
-  embedded-ui-is-current:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-      - run: make ui
-      - name: The committed UI must match a fresh build
-        run: |
-          git diff --exit-code -- internal/server/ui || {
-            echo "internal/server/ui is out of date. Run 'make ui' and commit the result." >&2
-            exit 1
-          }

@@ -1,0 +1,118 @@
+<div class="canvas-wrap panel-dark">
+  <div class="canvas-tools">
+    <button type="button" class="icon-button" aria-label="Zoom in" title="Zoom in (+)" (click)="zoomIn()">
+      <ng-icon [svg]="icons.phosphorMagnifyingGlassPlus" size="20" aria-hidden="true" />
+    </button>
+    <button type="button" class="icon-button" aria-label="Zoom out" title="Zoom out (-)" (click)="zoomOut()">
+      <ng-icon [svg]="icons.phosphorMagnifyingGlassMinus" size="20" aria-hidden="true" />
+    </button>
+    <button
+      type="button"
+      class="icon-button"
+      aria-label="Fit to screen"
+      title="Fit to screen (0)"
+      (click)="fitToScreen()"
+    >
+      <ng-icon [svg]="icons.phosphorArrowsOut" size="20" aria-hidden="true" />
+    </button>
+  </div>
+  <svg
+    #canvas
+    class="canvas"
+    role="group"
+    [attr.aria-label]="label()"
+    (keydown)="handleCanvasKeydown($event)"
+    (pointerdown)="startPan($event)"
+    (pointermove)="continuePan($event)"
+    (pointerup)="endPan()"
+  >
+    <defs>
+      <marker
+        [attr.id]="arrowMarkerId"
+        viewBox="0 0 10 10"
+        refX="9"
+        refY="5"
+        markerWidth="8"
+        markerHeight="8"
+        orient="auto-start-reverse"
+      >
+        <path d="M 0 1 L 9 5 L 0 9 z" fill="currentColor" />
+      </marker>
+    </defs>
+    <g [attr.transform]="viewTransform()">
+      <g class="er-edges">
+        @for (edge of edges(); track edge.key) {
+          <path
+            class="er-edge"
+            [class.is-active]="edge.isActive"
+            [class.is-faded]="edge.isFaded"
+            [attr.d]="edge.path"
+            [attr.marker-end]="'url(#' + arrowMarkerId + ')'"
+          />
+        }
+      </g>
+      @for (card of cards(); track card.name) {
+        <g
+          class="er-card"
+          [class.removed]="card.isRemoved"
+          [class.added]="card.mark === 'added'"
+          [class.changed]="card.mark === 'changed'"
+          [class.selected]="selectedTableName() === card.name"
+          [class.dimmed]="isDimmed(card.name)"
+          [attr.transform]="card.transform"
+          role="button"
+          tabindex="0"
+          [attr.aria-label]="card.ariaLabel"
+          [attr.aria-pressed]="selectedTableName() === card.name"
+          (click)="toggleTableSelection(card.name, $event)"
+          (keydown.enter)="toggleTableSelection(card.name, $event)"
+          (keydown.space)="toggleTableSelection(card.name, $event)"
+          (pointerenter)="setHoveredTable(card.name)"
+          (pointerleave)="setHoveredTable(null)"
+          (focus)="setHoveredTable(card.name)"
+          (blur)="setHoveredTable(null)"
+        >
+          <rect class="card-background" [attr.width]="card.box.width" [attr.height]="card.box.height" rx="16" />
+          <path class="card-header" [attr.d]="headerPath" fill="rgba(255,255,255,.08)" />
+          <text class="table-name" x="14" y="26" [textContent]="card.displayName"></text>
+          <text class="row-count" [attr.x]="constants.NODE_WIDTH - 14" y="25" text-anchor="end" [textContent]="card.rowCountLabel"></text>
+          @for (column of card.columns; track column.name) {
+            <g>
+              <text
+                x="14"
+                [attr.y]="column.textY"
+                [class.column-added]="column.mark === 'added'"
+                [class.column-changed]="column.mark === 'changed'"
+               [textContent]="column.displayName"></text>
+              <text
+                class="column-type"
+                [attr.x]="constants.NODE_WIDTH - 14"
+                [attr.y]="column.textY"
+                text-anchor="end"
+               [textContent]="column.shortTypeName"></text>
+              @if (column.isPrimaryKey) {
+                <text
+                  class="primary-key-tag"
+                  [attr.x]="constants.NODE_WIDTH - 84"
+                  [attr.y]="column.textY"
+                  text-anchor="end"
+                >PK</text>
+              }
+              @if (column.isForeignKey) {
+                <text class="foreign-key-tag" [attr.x]="column.foreignKeyTagX" [attr.y]="column.textY" text-anchor="end">FK</text>
+              }
+            </g>
+          }
+          @if (card.hiddenColumnsLabel) {
+            <text
+              class="hidden-columns"
+              x="14"
+              [attr.y]="constants.HEADER_HEIGHT + constants.MAX_VISIBLE_COLUMNS * constants.ROW_HEIGHT + 18"
+             [textContent]="card.hiddenColumnsLabel"></text>
+          }
+        </g>
+      }
+    </g>
+  </svg>
+  <p class="canvas-hint">Drag to pan, scroll to zoom, click a table for details</p>
+</div>
